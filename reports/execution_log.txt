@@ -1,0 +1,250 @@
+/datas/Kemuel/Work/prog_carrer/projetos_portifolio/House-Price-Discovery-Mining-DM/main.py:115: Pandas4Warning: For backward compatibility, 'str' dtypes are included by select_dtypes when 'object' dtype is specified. This behavior is deprecated and will be removed in a future version. Explicitly pass 'str' to `include` to select them, or to `exclude` to remove them and silence this warning.
+See https://pandas.pydata.org/docs/user_guide/migration-3-strings.html#string-migration-select-dtypes for details on how to write code that works with pandas 2 and 3.
+  cat_cols = train_feat[top_10_features].select_dtypes(include=['object', 'category']).columns.tolist()
+
+================================================================================
+================= INICIANDO PIPELINE DE HOUSE PRICE DISCOVERY ==================
+================================================================================
+🕒 Início: 2026-03-15 21:45:35
+
+================================================================================
+======================== FASE 1: CARREGAMENTO DE DADOS =========================
+================================================================================
+✔️ Dados carregados de data/raw/train.csv. Shape: (1460, 81)
+
+=== ANÁLISE DE OUTLIERS (TREINO) ===
+⚠️  Detectadas 4 casas com GrLivArea > 4000 (Outliers recomendados para remoção).
+⚠️  Detectadas 4 casas com LotArea > 100.000 sqft.
+✔️ Remoção concluída. 8 registros removidos. Linhas restantes: 1452
+
+ℹ️  ESTATÍSTICAS DO ALVO (SalePrice):
+count      1452.000000
+mean     179832.814050
+std       76511.297631
+min       34900.000000
+25%      129900.000000
+50%      162900.000000
+75%      213492.500000
+max      625000.000000
+
+================================================================================
+========================= FASE 2: PREPARAÇÃO DE DADOS ==========================
+================================================================================
+
+📝 ESTRATÉGIA DE LIMPEZA E IMPUTAÇÃO:
+ - Categóricos (Alley, BsmtQual, etc): 'NA' significa ausência da característica.
+ - GarageYrBlt: Preenchido com 0 se sem garagem, ou YearBuilt se possui (garagem costuma ser original).
+ - LotFrontage: Mediana do Bairro (vizinhança define o padrão de recuo do lote).
+ - Fallback: Mediana para numéricos e Moda para categóricos (preserva tendência central).
+
+=== LIMPEZA E IMPUTAÇÃO DE DADOS ===
+✔️ Limpeza concluída. Todos os valores ausentes foram tratados.
+
+=== AGRUPANDO BAIRROS POR PREÇO MÉDIO (5 Níveis) ===
+✔️ Mapeamento de Bairros criado com sucesso.
+
+=== EXECUTANDO FEATURE ENGINEERING ===
+✔️ Novas features criadas. Total de colunas agora: 93
+
+================================================================================
+================== FASE 3: ANÁLISE EXPLORATÓRIA E CORRELAÇÕES ==================
+================================================================================
+
+📊 CALCULANDO INFORMAÇÃO MÚTUA (MI)...
+✔️ TOP 30 ATRIBUTOS POR MI (Útil para análise de agentes):
+QualAreaInteract    0.755092
+TotalSF             0.654477
+OverallQual         0.580166
+Neighborhood        0.493912
+GrLivArea           0.474944
+NbPriceTier         0.392118
+YearBuilt           0.375686
+GarageArea          0.372678
+GarageCars          0.366760
+TotalBsmtSF         0.362671
+TotalBathrooms      0.352008
+BsmtQual            0.343196
+HouseAge            0.342335
+ExterQual           0.339375
+KitchenQual         0.334233
+1stFlrSF            0.302612
+MSSubClass          0.286652
+YearsSinceRemod     0.271332
+GarageYrBlt         0.261084
+FullBath            0.257100
+YearRemodAdd        0.256954
+GarageFinish        0.254887
+LotFrontage         0.227504
+TotRmsAbvGrd        0.223178
+Foundation          0.212459
+GarageType          0.205869
+FireplaceQu         0.204936
+2ndFlrSF            0.201650
+HeatingQC           0.180093
+Exterior2nd         0.172270
+
+📉 Gerando e salvando visualizações...
+📉 Gráfico de MI salvo em: reports/figures/informacao_mutua.png
+
+🔗 TOP 15 CORRELAÇÕES LINEARES COM SalePrice:
+SalePrice           1.000000
+QualAreaInteract    0.865816
+TotalSF             0.820023
+OverallQual         0.802832
+GrLivArea           0.720183
+GarageCars          0.650498
+TotalBsmtSF         0.643992
+GarageArea          0.638284
+TotalBathrooms      0.634424
+1stFlrSF            0.622602
+FullBath            0.558330
+TotRmsAbvGrd        0.538858
+YearBuilt           0.538204
+YearRemodAdd        0.524355
+HasFireplace        0.479012
+📉 Heatmap de correlação salvo em: reports/figures/heatmap_correlacao.png
+
+📈 ANÁLISE DE RELAÇÃO DIRETA (vs SalePrice):
+ - QualAreaInteract | Correlação de Pearson:  0.866
+ - TotalSF         | Correlação de Pearson:  0.820
+ - OverallQual     | Correlação de Pearson:  0.803
+🔍 Gerando plots de distribuição em reports/figures/distributions...
+
+📊 ANÁLISE ESTATÍSTICA DE DISTRIBUIÇÃO:
+ - QualAreaInteract | Média:    9562.03 | Skew:   1.18 | Kurt:   2.12
+ - TotalSF         | Média:    2554.21 | Skew:   0.66 | Kurt:   0.92
+ - OverallQual     | Média:       6.09 | Skew:   0.18 | Kurt:   0.05
+ - GrLivArea       | Média:    1505.29 | Skew:   0.84 | Kurt:   1.00
+ - YearBuilt       | Média:    1971.20 | Skew:  -0.61 | Kurt:  -0.45
+ - GarageArea      | Média:     471.37 | Skew:   0.13 | Kurt:   0.77
+ - GarageCars      | Média:       1.76 | Skew:  -0.34 | Kurt:   0.22
+ - TotalBsmtSF     | Média:    1048.92 | Skew:   0.49 | Kurt:   1.78
+
+================================================================================
+=================== FASE 4: MINERAÇÃO DE PADRÕES FREQUENTES ====================
+================================================================================
+
+=== EXECUTANDO CLUSTERIZAÇÃO (K-Means: 5 clusters) ===
+✔️ Clusterização concluída. Segmentos criados: ['Segment_0', 'Segment_1', 'Segment_3', 'Segment_2', 'Segment_4']
+
+💠 Discretizando dados numéricos para mineração (5 Níveis)...
+📜 Minerando Regras de Associação (Apriori)...
+✔️ 77 Regras encontradas com o alvo (SalePriceBin).
+
+🔝 TOP 20 REGRAS DE ASSOCIAÇÃO (Ordenadas por Lift):
+                                                                          antecedents                                                       consequents  support  confidence     lift
+                            frozenset({GarageCars=Alto, QualAreaInteract=Muito Alto})       frozenset({SalePriceBin=Muito Alto, GarageArea=Muito Alto}) 0.083333    0.930769 7.550150
+                                     frozenset({GarageCars=Alto, TotalSF=Muito Alto})       frozenset({SalePriceBin=Muito Alto, GarageArea=Muito Alto}) 0.084711    0.911111 7.390689
+                                          frozenset({GarageCars=Alto, FullBath=Alto})       frozenset({SalePriceBin=Muito Alto, GarageArea=Muito Alto}) 0.086777    0.840000 6.813855
+                                                         frozenset({GarageCars=Alto})       frozenset({SalePriceBin=Muito Alto, GarageArea=Muito Alto}) 0.099174    0.808989 6.562300
+                     frozenset({TotalBsmtSF=Muito Alto, QualAreaInteract=Muito Alto})          frozenset({SalePriceBin=Muito Alto, TotalSF=Muito Alto}) 0.084022    0.910448 6.177431
+                        frozenset({1stFlrSF=Muito Alto, QualAreaInteract=Muito Alto})          frozenset({SalePriceBin=Muito Alto, TotalSF=Muito Alto}) 0.081267    0.874074 5.930633
+                      frozenset({GarageArea=Muito Alto, QualAreaInteract=Muito Alto})          frozenset({SalePriceBin=Muito Alto, TotalSF=Muito Alto}) 0.090909    0.800000 5.428037
+                               frozenset({GarageArea=Muito Alto, TotalSF=Muito Alto}) frozenset({SalePriceBin=Muito Alto, QualAreaInteract=Muito Alto}) 0.090909    0.800000 5.256109
+frozenset({TotalBathrooms=Muito Baixo, FullBath=Baixo, QualAreaInteract=Muito Baixo})     frozenset({SalePriceBin=Muito Baixo, MSSubClass=Muito Baixo}) 0.080579    0.754839 5.097794
+                frozenset({TotalBathrooms=Muito Baixo, QualAreaInteract=Muito Baixo})     frozenset({SalePriceBin=Muito Baixo, MSSubClass=Muito Baixo}) 0.081956    0.753165 5.086488
+                                frozenset({GrLivArea=Muito Alto, TotalSF=Muito Alto}) frozenset({SalePriceBin=Muito Alto, QualAreaInteract=Muito Alto}) 0.097796    0.771739 5.070431
+                  frozenset({TotalSF=Muito Alto, NbPriceTier=NbPriceTier=NB_Level_5})                              frozenset({SalePriceBin=Muito Alto}) 0.080579    0.975000 4.984859
+                                      frozenset({GrLivArea=Muito Alto, ExterQual=Gd}) frozenset({SalePriceBin=Muito Alto, QualAreaInteract=Muito Alto}) 0.081956    0.753165 4.948393
+         frozenset({NbPriceTier=NbPriceTier=NB_Level_5, QualAreaInteract=Muito Alto})                              frozenset({SalePriceBin=Muito Alto}) 0.081267    0.959350 4.904844
+                            frozenset({GarageCars=Alto, QualAreaInteract=Muito Alto})                              frozenset({SalePriceBin=Muito Alto}) 0.085399    0.953846 4.876706
+     frozenset({GarageCars=Alto, GarageArea=Muito Alto, QualAreaInteract=Muito Alto})                              frozenset({SalePriceBin=Muito Alto}) 0.083333    0.952756 4.871132
+ frozenset({TotalBathrooms=Muito Baixo, MSSubClass=Muito Baixo, TotalSF=Muito Baixo})             frozenset({SalePriceBin=Muito Baixo, FullBath=Baixo}) 0.081267    0.825175 4.850825
+           frozenset({TotalBathrooms=Muito Baixo, ExterQual=TA, TotalSF=Muito Baixo})             frozenset({SalePriceBin=Muito Baixo, FullBath=Baixo}) 0.086088    0.816993 4.802731
+                                     frozenset({GarageCars=Alto, TotalSF=Muito Alto})                              frozenset({SalePriceBin=Muito Alto}) 0.086777    0.933333 4.771831
+                     frozenset({TotalBsmtSF=Muito Alto, QualAreaInteract=Muito Alto})                              frozenset({SalePriceBin=Muito Alto}) 0.086088    0.932836 4.769287
+
+🧵 Minerando Padrões Sequenciais (PrefixSpan)...
+✔️ 423 Padrões de atributos encontrados.
+🔝 TOP 10 PADRÕES DE ATRIBUTOS:
+   Suporte:  222 | Padrão: ['Médio', 'NB_Level_3', 'NB_Level_3', 'Médio', 'Médio']
+   Suporte:  187 | Padrão: ['Baixo', 'NB_Level_3', 'NB_Level_3', 'Médio', 'Baixo']
+   Suporte:  183 | Padrão: ['Segment_1', 'NB_Level_3', 'NB_Level_3', 'Médio', 'Baixo']
+   Suporte:  179 | Padrão: ['NB_Level_3', 'NB_Level_3', 'NAmes', 'Médio', 'Baixo']
+   Suporte:  177 | Padrão: ['Médio', 'NB_Level_3', 'NB_Level_3', 'Médio', 'Alto']
+   Suporte:  176 | Padrão: ['Baixo', 'NB_Level_3', 'NB_Level_3', 'Médio', 'Médio']
+   Suporte:  175 | Padrão: ['Médio', 'NB_Level_3', 'NB_Level_3', 'Médio', 'Baixo']
+   Suporte:  174 | Padrão: ['Médio', 'NB_Level_4', 'NB_Level_4', 'Alto', 'Alto']
+   Suporte:  173 | Padrão: ['NB_Level_3', 'NB_Level_3', 'Médio', 'Médio', 'Baixo']
+   Suporte:  166 | Padrão: ['Muito Alto', 'Alto', 'Muito Alto', 'Muito Alto', 'Muito Alto']
+
+=== MINERANDO EVOLUÇÃO TEMPORAL POR BAIRRO (AGRUPADO POR DÉCADA) ===
+✔️ Geradas 19 sequências de evolução por década.
+✔️ 36 Padrões de evolução temporal encontrados.
+🔝 TOP 10 PADRÕES DE EVOLUÇÃO (Bairros):
+   Suporte:    3 | Evolução: ['Q:Médio_P:Muito Baixo', 'Q:Médio_P:Baixo', 'Q:Médio_P:Médio', 'Q:Médio_P:Baixo']
+   Suporte:    3 | Evolução: ['Q:Médio_P:Muito Baixo', 'Q:Médio_P:Muito Baixo', 'Q:Médio_P:Muito Baixo', 'Q:Médio_P:Muito Baixo']
+   Suporte:    3 | Evolução: ['Q:Médio_P:Muito Baixo', 'Q:Médio_P:Muito Baixo', 'Q:Médio_P:Muito Baixo', 'Q:Médio_P:Baixo']
+   Suporte:    5 | Evolução: ['Q:Médio_P:Baixo', 'Q:Médio_P:Médio', 'Q:Médio_P:Baixo']
+   Suporte:    5 | Evolução: ['Q:Médio_P:Muito Baixo', 'Q:Médio_P:Muito Baixo', 'Q:Médio_P:Muito Baixo']
+   Suporte:    3 | Evolução: ['Q:Médio_P:Baixo', 'Q:Médio_P:Baixo', 'Q:Médio_P:Médio']
+   Suporte:    3 | Evolução: ['Q:Médio_P:Baixo', 'Q:Médio_P:Médio', 'Q:Alto_P:Muito Alto']
+   Suporte:    3 | Evolução: ['Q:Médio_P:Médio', 'Q:Médio_P:Médio', 'Q:Alto_P:Muito Alto']
+   Suporte:    3 | Evolução: ['Q:Médio_P:Médio', 'Q:Médio_P:Alto', 'Q:Alto_P:Alto']
+   Suporte:    3 | Evolução: ['Q:Médio_P:Médio', 'Q:Médio_P:Baixo', 'Q:Médio_P:Médio']
+
+================================================================================
+==================== FASE 5: MODELAGEM PREDITIVA (XGBOOST) =====================
+================================================================================
+
+⚙️  Preparando dados para o modelo...
+
+🏋️  Iniciando treinamento com Validação Cruzada (10-fold)...
+
+Executando Validação Cruzada (10 folds)...
+R² Médio: 0.9097
+RMSE Médio (log): 0.1177
+
+Modelo final treinado. Melhor iteração: 1194
+MAE na escala original: $15,743.65
+
+🔝 TOP 10 FEATURES (IMPORTÂNCIA DO MODELO):
+         Feature  Importance
+     OverallQual    0.159570
+QualAreaInteract    0.140483
+       ExterQual    0.048964
+      GarageCars    0.042407
+     NbPriceTier    0.038945
+         TotalSF    0.036859
+      CentralAir    0.031767
+        BsmtQual    0.025420
+     KitchenQual    0.024379
+    Neighborhood    0.020912
+
+📉 Gerando gráfico de resultados da regressão...
+📉 Gráfico de resultados da regressão salvo em: reports/figures/resultados_regressao.png
+📉 Gráfico de importância salvo em: reports/figures/importancia_features_model.png
+
+================================================================================
+====================== FASE 6: GERAÇÃO DE SUBMISSÃO FINAL ======================
+================================================================================
+📂 Carregando dados de teste...
+✔️ Dados carregados de data/raw/test.csv. Shape: (1459, 80)
+
+=== LIMPEZA E IMPUTAÇÃO DE DADOS ===
+✔️ Limpeza concluída. Todos os valores ausentes foram tratados.
+
+=== EXECUTANDO FEATURE ENGINEERING ===
+✔️ Novas features criadas. Total de colunas agora: 92
+
+✔️ Submissão salva em data/processed/submission.csv
+
+📊 RESUMO DA SUBMISSÃO (Primeiras 10 linhas):
+  Id     SalePrice
+1461 120820.242188
+1462 162919.484375
+1463 183953.234375
+1464 187691.093750
+1465 191373.453125
+1466 176796.921875
+1467 175263.046875
+1468 172507.828125
+1469 187265.031250
+1470 129386.734375
+
+================================================================================
+============================= PIPELINE FINALIZADO ==============================
+================================================================================
+🕒 Fim: 2026-03-15 21:45:43
+⏱️  Duração total: 0:00:07.878710
+================================================================================
