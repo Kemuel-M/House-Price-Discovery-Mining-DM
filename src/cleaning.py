@@ -154,6 +154,26 @@ def add_feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
     df_feat['HasGarage'] = (df_feat['GarageArea'] > 0).astype(int)
     df_feat['HasFireplace'] = (df_feat['Fireplaces'] > 0).astype(int)
 
+    # --- NOVAS FEATURES PARA SEGMENTO DE ENTRADA (D1) ---
+    # 1. IsDistressed: Imoveis em condicoes precarias
+    df_feat['IsDistressed'] = ((df_feat['OverallCond'] < 4) & (df_feat['OverallQual'] < 4)).astype(int)
+
+    # 2. NearNegativeAmenity: Proximidade de ferrovias ou vias arteriais
+    neg_amenities = ['Artery', 'Feedr', 'RRNn', 'RRAn', 'RRNe', 'RRAe']
+    df_feat['NearNegativeAmenity'] = (
+        df_feat['Condition1'].isin(neg_amenities) | 
+        df_feat['Condition2'].isin(neg_amenities)
+    ).astype(int)
+
+    # 3. OldHighCond: Casas antigas, mas bem mantidas (joias escondidas)
+    df_feat['OldHighCond'] = ((df_feat['YearBuilt'] < 1950) & (df_feat['OverallCond'] >= 7)).astype(int)
+
+    # 4. ZoningCrit: Zonas comerciais ou multifamiliares de alta densidade (C ou RM)
+    df_feat['ZoningCrit'] = df_feat['MSZoning'].isin(['C (all)', 'RM']).astype(int)
+
+    # 5. IsAbnormalSale: Vendas anormais ou adjacentes que afetam o preco
+    df_feat['IsAbnormalSale'] = df_feat['SaleCondition'].isin(['Abnorml', 'AdjLand']).astype(int)
+
     print(f"Novas features criadas. Total de colunas: {len(df_feat.columns)}")
     return df_feat
 
