@@ -11,11 +11,27 @@ This repository implements a modular pipeline to solve the classic Ames Housing 
 1.  **Predictive Modeling**: Achieve high accuracy in house price estimation using XGBoost.
 2.  **Insight Discovery**: Use Association Rules and Sequential Patterns to understand what combinations of features drive high-value sales.
 
-### Key Results
-- **R² Score**: ~0.906 (10-fold Cross-Validation)
-- **RMSE (log)**: ~0.117
-- **Mean Absolute Error (MAE)**: ~$12,500 on original scale
-- **Primary Price Drivers**: `OverallQual`, `QualAreaInteract` (Quality * Area), and `Neighborhood`.
+### 🏆 Key Results & Performance Scorecard
+
+| Metric | Cross-Validation (10-Fold) | Final Model (Training Set) |
+| :--- | :--- | :--- |
+| **R² Score** | **0.9062** | 0.9852 |
+| **RMSE (log)** | **0.1171** | 0.0781 |
+| **MAE (Log)** | 0.0812 | 0.0559 |
+| **MAE (Original)** | **$12,591.97** | $8,842.10 |
+
+> **Note**: Cross-Validation metrics are the most reliable indicators of real-world performance. The Final Model metrics show the fit on the training data used for the Kaggle submission.
+
+#### 📉 Error Analysis by Price Segment
+The model exhibits high stability across most price ranges, with a slight increase in relative error for the lowest decile (D1), as shown in our segment analysis:
+
+| Price Decile | Avg Log Error | MAE ($) |
+| :--- | :--- | :--- |
+| **D1 (Cheapest 10%)** | 0.095 | $8,378 |
+| **D5 (Median)** | 0.051 | $7,952 |
+| **D10 (Most Expensive 10%)** | 0.063 | $20,958 |
+
+**Primary Price Drivers**: `OverallQual` (17.6%), `QualAreaInteract` (13.2%), and `ExterQual` (5.4%).
 
 ---
 
@@ -25,17 +41,17 @@ This repository implements a modular pipeline to solve the classic Ames Housing 
 - **Robust Imputation**: Neighborhood-based median imputation for `LotFrontage` and logical fill-ins for categorical features (e.g., 'NA' for houses without garages).
 - **Multivariate Outlier Detection**: Combines domain-specific rules with **Isolation Forest** to ensure high-quality training data.
 - **Smart Feature Engineering**: 
-    - `QualAreaInteract`: Captures the non-linear relationship between quality and living area.
-    - `NbPriceTier`: Groups 25+ neighborhoods into 5 distinct price levels to reduce dimensionality while preserving signal.
+    - `QualAreaInteract`: Captures the non-linear relationship between quality and living area (Top predictor).
+    - `NbPriceTier`: Groups 25+ neighborhoods into 5 distinct price levels.
+    - `TotalSF`: Combined square footage of basement and upper floors.
     - `TotalBathrooms` & `HouseAge`: Consolidated metrics for better model performance.
 
 ### 🔍 Discovery Mining (DM)
-- **Association Rules (Apriori)**: Identifies feature combinations that lead to high-value "Muito Alto" price segments (e.g., *GarageCars=Alto + High Quality -> SalePrice=Muito Alto*).
+- **Association Rules (Apriori)**:
+    - *Rule*: (GarageCars=Alto, QualAreaInteract=Muito Alto) → (SalePrice=Muito Alto) | **Lift: 7.51**
+    - *Rule*: (TotalBsmtSF=Muito Alto, QualAreaInteract=Muito Alto) → (SalePrice=Muito Alto) | **Lift: 6.22**
 - **Sequential Patterns (PrefixSpan)**: Analyzes the "evolutionary patterns" of house attributes across different construction decades.
-- **Market Segmentation**: Uses **K-Means Clustering** to segment the market into distinct clusters (e.g., entry-level, luxury, renovated old homes).
-
-### 📈 Detailed Error Analysis
-- The pipeline generates a **Decile Error Report**, showing that the model is most accurate for mid-range homes but faces challenges in the lowest 10% (D1) price segment, allowing for targeted future improvements.
+- **Market Segmentation**: Market split into 5 distinct clusters using **K-Means**.
 
 ---
 
@@ -83,11 +99,15 @@ This repository implements a modular pipeline to solve the classic Ames Housing 
 
 ## 📊 Visualizations
 
-The pipeline automatically generates several reports in `reports/figures/`:
-- **`informacao_mutua.png`**: Top features ranked by Mutual Information.
-- **`heatmap_correlacao.png`**: Pearson vs. Spearman correlation matrix.
-- **`importancia_features_model.png`**: Global importance assigned by XGBoost.
-- **`resultados_regressao.png`**: Residual plots and predicted vs. real values.
+<p align="center">
+  <img src="reports/figures/importancia_features_model.png" width="45%" />
+  <img src="reports/figures/resultados_regressao.png" width="45%" />
+</p>
+
+<p align="center">
+  <img src="reports/figures/informacao_mutua.png" width="45%" />
+  <img src="reports/figures/heatmap_correlacao.png" width="45%" />
+</p>
 
 ---
 
