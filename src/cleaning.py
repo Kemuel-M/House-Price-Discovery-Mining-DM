@@ -3,53 +3,58 @@ import numpy as np
 import os
 from sklearn.feature_selection import mutual_info_regression
 from sklearn.preprocessing import LabelEncoder
+from sklearn.ensemble import IsolationForest
 
 def read_data(file_path: str) -> pd.DataFrame:
     """Carrega o CSV e retorna um DataFrame."""
     try:
         df = pd.read_csv(file_path)
-        print(f"✔️ Dados carregados de {file_path}. Shape: {df.shape}")
+        print(f"Dados carregados de {file_path}. Shape: {df.shape}")
         return df
     except FileNotFoundError:
-        print(f"❌ Erro: Arquivo {file_path} não encontrado.")
+        print(f"Erro: Arquivo {file_path} não encontrado.")
         return pd.DataFrame()
 
 def handle_outliers(df: pd.DataFrame, is_train: bool = True) -> pd.DataFrame:
     """
-    Identifica e remove outliers críticos. 
-    Nota: Só removemos outliers do conjunto de TREINO. Nunca do teste.
+    Identifica e remove outliers usando Isolation Forest e regras de dominio.
+    Nota: Só removemos outliers do conjunto de TREINO.
     """
     if not is_train:
         return df
 
     df_clean = df.copy()
-    print("\n=== ANÁLISE DE OUTLIERS (TREINO) ===")
+    print("\n--- ANALISE DE OUTLIERS (TREINO) ---")
     
-    initial_rows = len(df_clean)
-    
-    # 1. Recomendação do autor do dataset (Dean De Cock):
-    # Remover casas com GrLivArea > 4000 sqft
-    outliers_area = df_clean[df_clean['GrLivArea'] > 4000].index
-    print(f"⚠️  Detectadas {len(outliers_area)} casas com GrLivArea > 4000 (Outliers recomendados para remoção).")
-    
-    # 2. Outliers de LotArea (Terrenos absurdamente grandes que distorcem a média)
-    outliers_lot = df_clean[df_clean['LotArea'] > 100000].index
-    print(f"⚠️  Detectadas {len(outliers_lot)} casas com LotArea > 100.000 sqft.")
+    # 1. Regras de Dominio (Recomendacao do autor)
+    outliers_manual = df_clean[(df_clean['GrLivArea'] > 4000) | (df_clean['LotArea'] > 100000)].index
+    if len(outliers_manual) > 0:
+        print(f"Detectados {len(outliers_manual)} outliers via regras de dominio (GrLivArea/LotArea).")
 
-    # Remover os índices identificados
-    to_remove = list(set(outliers_area) | set(outliers_lot))
+    # 2. Isolation Forest (Deteccao estatistica multivariada)
+    # Usamos as colunas numericas mais importantes para a deteccao
+    cols_to_check = ['GrLivArea', 'TotalBsmtSF', '1stFlrSF', 'GarageArea', 'LotArea', 'SalePrice']
+    cols_present = [c for c in cols_to_check if c in df_clean.columns]
+    
+    iso = IsolationForest(contamination=0.01, random_state=42)
+    preds = iso.fit_predict(df_clean[cols_present].fillna(df_clean[cols_present].median()))
+    outliers_iso = df_clean.index[preds == -1]
+    print(f"Detectados {len(outliers_iso)} outliers via Isolation Forest.")
+
+    # Remover os indices identificados (uniao das tecnicas)
+    to_remove = list(set(outliers_manual) | set(outliers_iso))
     df_clean = df_clean.drop(to_remove, axis=0)
     
-    print(f"✔️ Remoção concluída. {len(to_remove)} registros removidos. Linhas restantes: {len(df_clean)}")
+    print(f"Remocao concluida. {len(to_remove)} registros removidos. Linhas restantes: {len(df_clean)}")
     
     return df_clean
 
 def clean_and_impute_data(df: pd.DataFrame) -> pd.DataFrame:
-    """Limpeza e imputação robusta de valores ausentes."""
+    """Limpeza e imputacao robusta de valores ausentes."""
     df_copy = df.copy()
-    print("\n=== LIMPEZA E IMPUTAÇÃO DE DADOS ===")
+    print("\n--- LIMPEZA E IMPUTACAO DE DADOS ---")
 
-    # 1. Categóricos onde NaN significa 'Não Possui'
+    # 1. Categoricos onde NaN significa 'Nao Possui'
     cols_fill_na = [
         'Alley', 'BsmtQual', 'BsmtCond', 'BsmtExposure', 'BsmtFinType1',
         'BsmtFinType2', 'FireplaceQu', 'GarageType', 'GarageFinish',
@@ -59,7 +64,7 @@ def clean_and_impute_data(df: pd.DataFrame) -> pd.DataFrame:
         if col in df_copy.columns:
             df_copy[col] = df_copy[col].fillna('NA')
 
-    # 2. Lógica para GarageYrBlt
+    # 2. Logica para GarageYrBlt
     if 'GarageType' in df_copy.columns and 'GarageYrBlt' in df_copy.columns:
         mask_no_garage = df_copy["GarageType"] == "NA"
         df_copy.loc[mask_no_garage, "GarageYrBlt"] = df_copy.loc[mask_no_garage, "GarageYrBlt"].fillna(0)
@@ -67,13 +72,13 @@ def clean_and_impute_data(df: pd.DataFrame) -> pd.DataFrame:
             df_copy.loc[~mask_no_garage, "YearBuilt"]
         )
 
-    # 3. Lógica para LotFrontage (mediana do bairro)
+    # 3. Logica para LotFrontage (mediana do bairro)
     if 'LotFrontage' in df_copy.columns and 'Neighborhood' in df_copy.columns:
         df_copy['LotFrontage'] = df_copy.groupby('Neighborhood')['LotFrontage'].transform(
             lambda x: x.fillna(x.median())
         )
 
-    # 4. Outros preenchimentos padrão
+    # 4. Outros preenchimentos padrao
     if 'MasVnrArea' in df_copy.columns:
         df_copy['MasVnrArea'] = df_copy['MasVnrArea'].fillna(0)
 
@@ -86,9 +91,9 @@ def clean_and_impute_data(df: pd.DataFrame) -> pd.DataFrame:
     # FALLBACK GLOBAL: Garante que NENHUM nulo passe para o modelo
     for col in df_copy.columns:
         if df_copy[col].isnull().any():
-            if df_copy[col].dtype.kind in 'biufc': # Numéricos
+            if df_copy[col].dtype.kind in 'biufc': # Numericos
                 df_copy[col] = df_copy[col].fillna(df_copy[col].median())
-            else: # Categóricos/Objetos
+            else: # Categoricos/Objetos
                 mode_val = df_copy[col].mode()
                 if not mode_val.empty:
                     df_copy[col] = df_copy[col].fillna(mode_val[0])
@@ -97,39 +102,25 @@ def clean_and_impute_data(df: pd.DataFrame) -> pd.DataFrame:
 
     remaining_missing = df_copy.isnull().sum().sum()
     if remaining_missing > 0:
-        print(f"⚠️ Atenção: Ainda restam {remaining_missing} valores ausentes!")
-        print(df_copy.columns[df_copy.isnull().any()].tolist())
+        print(f"Atencao: Ainda restam {remaining_missing} valores ausentes!")
     else:
-        print(f"✔️ Limpeza concluída. Todos os valores ausentes foram tratados.")
+        print(f"Limpeza concluida. Valores ausentes tratados.")
     
     return df_copy
 
 def group_neighborhoods_by_price(df: pd.DataFrame, bins: int = 5, mapping: dict = None) -> (pd.DataFrame, dict):
-    """
-    Agrupa bairros em níveis de preço (ex: Elite, High, Medium, Low).
-    Se mapping for fornecido, usa ele (para o conjunto de teste).
-    Se não, calcula baseado na média do SalePrice (para o conjunto de treino).
-    """
+    """Agrupa bairros em niveis de preco."""
     df_nb = df.copy()
     
     if mapping is None:
-        # Estamos no conjunto de TREINO
-        print(f"\n=== AGRUPANDO BAIRROS POR PREÇO MÉDIO ({bins} Níveis) ===")
-        # 1. Calcular a média de preço por bairro
+        print(f"\n--- AGRUPANDO BAIRROS POR PRECO MEDIO ({bins} Niveis) ---")
         nb_means = df_nb.groupby('Neighborhood')['SalePrice'].mean().sort_values()
-        
-        # 2. Criar os bins (labels)
         labels = [f"NB_Level_{i}" for i in range(1, bins + 1)]
         nb_groups = pd.qcut(nb_means, q=bins, labels=labels)
         mapping = nb_groups.to_dict()
-        
-        # Mostrar o mapeamento para log
-        print("✔️ Mapeamento de Bairros criado com sucesso.")
+        print("Mapeamento de Bairros criado.")
     
-    # 3. Aplicar o mapeamento
     df_nb['NbPriceTier'] = df_nb['Neighborhood'].map(mapping)
-    
-    # Tratar bairros que podem existir no teste mas não no treino (fallback para Mediana)
     if df_nb['NbPriceTier'].isnull().any():
         median_tier = f"NB_Level_{bins // 2 + 1}"
         df_nb['NbPriceTier'] = df_nb['NbPriceTier'].fillna(median_tier)
@@ -137,51 +128,33 @@ def group_neighborhoods_by_price(df: pd.DataFrame, bins: int = 5, mapping: dict 
     return df_nb, mapping
 
 def add_feature_engineering(df: pd.DataFrame) -> pd.DataFrame:
-    """Cria novas features baseadas no conhecimento de domínio (Feature Engineering)."""
+    """Cria novas features baseadas no conhecimento de dominio."""
     df_feat = df.copy()
-    print("\n=== EXECUTANDO FEATURE ENGINEERING ===")
+    print("\n--- EXECUTANDO FEATURE ENGINEERING ---")
 
-    # 1. Áreas Totais
-    # Total SF (Área interna total: Porão + Acima do solo)
     df_feat['TotalSF'] = df_feat['GrLivArea'] + df_feat['TotalBsmtSF']
-    
-    # Qualidade x Área (Interação poderosa)
     df_feat['QualAreaInteract'] = df_feat['OverallQual'] * df_feat['GrLivArea']
-
-    # 2. Banheiros Totais
     df_feat['TotalBathrooms'] = (
-        df_feat['FullBath'] + 
-        (0.5 * df_feat['HalfBath']) + 
-        df_feat['BsmtFullBath'] + 
-        (0.5 * df_feat['BsmtHalfBath'])
+        df_feat['FullBath'] + (0.5 * df_feat['HalfBath']) + 
+        df_feat['BsmtFullBath'] + (0.5 * df_feat['BsmtHalfBath'])
     )
 
-    # 3. Idade e Tempo de Reforma
-    # Nota: YrSold pode não estar no teste em alguns contextos, mas no Kaggle geralmente está.
-    # Se não houver YrSold, usamos o máximo do treino como referência.
     ref_year = df_feat['YrSold'] if 'YrSold' in df_feat.columns else 2010
     df_feat['HouseAge'] = ref_year - df_feat['YearBuilt']
     df_feat['YearsSinceRemod'] = ref_year - df_feat['YearRemodAdd']
-    
-    # Flag de Casa Nova (vendida no mesmo ano da construção)
     df_feat['IsNewHouse'] = (df_feat['YearBuilt'] == df_feat['YrSold']).astype(int)
 
-    # 4. Consolidar áreas externas
     df_feat['TotalPorchSF'] = (
-        df_feat['WoodDeckSF'] + 
-        df_feat['OpenPorchSF'] + 
-        df_feat['EnclosedPorch'] + 
-        df_feat['3SsnPorch'] + 
-        df_feat['ScreenPorch']
+        df_feat['WoodDeckSF'] + df_feat['OpenPorchSF'] + 
+        df_feat['EnclosedPorch'] + df_feat['3SsnPorch'] + df_feat['ScreenPorch']
     )
 
-    # 5. Flags Binárias de Facilidades
     df_feat['HasPool'] = (df_feat['PoolArea'] > 0).astype(int)
     df_feat['Has2ndFloor'] = (df_feat['2ndFlrSF'] > 0).astype(int)
     df_feat['HasGarage'] = (df_feat['GarageArea'] > 0).astype(int)
     df_feat['HasFireplace'] = (df_feat['Fireplaces'] > 0).astype(int)
 
-    print(f"✔️ Novas features criadas. Total de colunas agora: {len(df_feat.columns)}")
+    print(f"Novas features criadas. Total de colunas: {len(df_feat.columns)}")
     return df_feat
 
 def get_mutual_info_scores(df: pd.DataFrame, target_column: str = 'SalePrice') -> pd.Series:

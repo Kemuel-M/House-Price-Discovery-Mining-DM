@@ -1,0 +1,727 @@
+
+------------------------------------------------------------
+------- INICIANDO PIPELINE DE HOUSE PRICE DISCOVERY --------
+------------------------------------------------------------
+Inicio: 2026-03-16 16:18:29
+Log de execucao salvo em: reports/execution_log_20260316_161829.txt
+
+------------------------------------------------------------
+-------------- FASE 1: CARREGAMENTO DE DADOS ---------------
+------------------------------------------------------------
+Dados carregados de data/raw/train.csv. Shape: (1460, 81)
+
+--- ANALISE DE OUTLIERS (TREINO) ---
+Detectados 8 outliers via regras de dominio (GrLivArea/LotArea).
+Detectados 15 outliers via Isolation Forest.
+Remocao concluida. 17 registros removidos. Linhas restantes: 1443
+
+ESTATISTICAS DO ALVO (SalePrice):
+count      1443.000000
+mean     178014.519751
+std       72024.183852
+min       34900.000000
+25%      129900.000000
+50%      162000.000000
+75%      212450.000000
+max      582933.000000
+
+------------------------------------------------------------
+--------------- FASE 2: PREPARACAO DE DADOS ----------------
+------------------------------------------------------------
+
+ESTRATEGIA DE LIMPEZA E IMPUTACAO:
+ - Categoricos: 'NA' para ausencia da caracteristica.
+ - GarageYrBlt: 0 se sem garagem, ou YearBuilt se possui.
+ - LotFrontage: Mediana do Bairro.
+ - Fallback: Mediana para numericos e Moda para categoricos.
+
+--- LIMPEZA E IMPUTACAO DE DADOS ---
+Limpeza concluida. Valores ausentes tratados.
+
+--- AGRUPANDO BAIRROS POR PRECO MEDIO (5 Niveis) ---
+Mapeamento de Bairros criado.
+
+--- EXECUTANDO FEATURE ENGINEERING ---
+Novas features criadas. Total de colunas: 93
+
+------------------------------------------------------------
+-------- FASE 3: ANALISE EXPLORATORIA E CORRELACOES --------
+------------------------------------------------------------
+
+Calculando Informacao Mutua (MI)...
+Top 30 atributos por MI:
+QualAreaInteract    0.739209
+TotalSF             0.636595
+OverallQual         0.559988
+Neighborhood        0.496509
+GrLivArea           0.458496
+NbPriceTier         0.372150
+YearBuilt           0.362361
+GarageArea          0.362339
+HouseAge            0.355723
+TotalBsmtSF         0.355593
+GarageCars          0.354649
+BsmtQual            0.341936
+ExterQual           0.336117
+TotalBathrooms      0.335759
+KitchenQual         0.316111
+1stFlrSF            0.292608
+MSSubClass          0.275109
+GarageFinish        0.264483
+GarageYrBlt         0.263859
+YearsSinceRemod     0.261331
+FullBath            0.260526
+YearRemodAdd        0.247793
+LotFrontage         0.224434
+TotRmsAbvGrd        0.215933
+GarageType          0.213801
+FireplaceQu         0.210532
+2ndFlrSF            0.200604
+Foundation          0.194227
+Fireplaces          0.175140
+Exterior2nd         0.170147
+
+Gerando e salvando visualizacoes...
+
+--- DADOS DE INFORMACAO MUTUA (Top 30) ---
+QualAreaInteract    0.739209
+TotalSF             0.636595
+OverallQual         0.559988
+Neighborhood        0.496509
+GrLivArea           0.458496
+NbPriceTier         0.372150
+YearBuilt           0.362361
+GarageArea          0.362339
+HouseAge            0.355723
+TotalBsmtSF         0.355593
+GarageCars          0.354649
+BsmtQual            0.341936
+ExterQual           0.336117
+TotalBathrooms      0.335759
+KitchenQual         0.316111
+1stFlrSF            0.292608
+MSSubClass          0.275109
+GarageFinish        0.264483
+GarageYrBlt         0.263859
+YearsSinceRemod     0.261331
+FullBath            0.260526
+YearRemodAdd        0.247793
+LotFrontage         0.224434
+TotRmsAbvGrd        0.215933
+GarageType          0.213801
+FireplaceQu         0.210532
+2ndFlrSF            0.200604
+Foundation          0.194227
+Fireplaces          0.175140
+Exterior2nd         0.170147
+Grafico de MI salvo em: reports/figures/informacao_mutua.png
+
+--- MATRIZ DE CORRELACAO DETALHADA (Top 15 vs SalePrice) ---
+                   Pearson  Spearman
+SalePrice         1.000000  1.000000
+QualAreaInteract  0.859331  0.850667
+TotalSF           0.809739  0.810809
+OverallQual       0.804975  0.808349
+GrLivArea         0.708510  0.725291
+GarageCars        0.654780  0.685320
+GarageArea        0.640572  0.644650
+TotalBathrooms    0.633126  0.698409
+TotalBsmtSF       0.626683  0.592954
+1stFlrSF          0.604176  0.564297
+FullBath          0.558503  0.629775
+HouseAge         -0.558456 -0.654951
+YearBuilt         0.558025  0.657322
+YearsSinceRemod  -0.537844 -0.578297
+YearRemodAdd      0.535660  0.572831
+Heatmap salvo em: reports/figures/heatmap_correlacao.png
+
+--- ANALISE DE RELACAO DETALHADA (Target: SalePrice) ---
+
+Relacao: QualAreaInteract vs SalePrice
+Correlacao -> Pearson: 0.8593 | Spearman: 0.8507
+Estatisticas do Alvo por Quartis da Feature:
+                             mean    median           std  count
+QualAreaInteract                                                
+(875.999, 5760.0]   116261.301105  120000.0  26011.507534    362
+(5760.0, 8750.0]    145753.488950  146250.0  28769.399546    362
+(8750.0, 12040.0]   183516.306407  181000.0  35763.702914    359
+(12040.0, 29450.0]  267064.566667  255700.0  71912.628004    360
+
+Relacao: TotalSF vs SalePrice
+Correlacao -> Pearson: 0.8097 | Spearman: 0.8108
+Estatisticas do Alvo por Quartis da Feature:
+                            mean    median           std  count
+TotalSF                                                        
+(719.999, 2009.0]  116072.836565  118964.0  27275.346695    361
+(2009.0, 2468.0]   148804.670360  148000.0  26746.708528    361
+(2468.0, 2990.5]   185062.133333  182450.0  38959.131026    360
+(2990.5, 5271.0]   262137.961219  255900.0  77179.840784    361
+
+Relacao: OverallQual vs SalePrice
+Correlacao -> Pearson: 0.8050 | Spearman: 0.8083
+Estatisticas do Alvo por Quartis da Feature:
+                       mean    median           std  count
+OverallQual                                               
+(0.999, 5.0]  125601.494403  127750.0  30506.871056    536
+(5.0, 6.0]    161293.659517  160000.0  35638.599117    373
+(6.0, 7.0]    206891.290221  200100.0  43271.146888    317
+(7.0, 10.0]   294034.456221  283463.0  73164.224062    217
+Gerando plots de distribuicao em reports/figures/distributions...
+
+--- ANALISE DE DISTRIBUICAO: VARIAVEIS NUMERICAS ---
+
+Atributo: QualAreaInteract
+Estatisticas:
+count     1443.000000
+mean      9471.649342
+std       4597.814334
+min        876.000000
+25%       5760.000000
+50%       8750.000000
+75%      12040.000000
+max      29450.000000
+Skewness: 1.00 | Kurtosis: 1.09
+Distribuicao por faixas (Bins):
+QualAreaInteract
+(847.426, 3733.4]      64
+(3733.4, 6590.8]      401
+(6590.8, 9448.2]      340
+(9448.2, 12305.6]     290
+(12305.6, 15163.0]    183
+(15163.0, 18020.4]     88
+(18020.4, 20877.8]     42
+(20877.8, 23735.2]     20
+(23735.2, 26592.6]     11
+(26592.6, 29450.0]      4
+
+Atributo: TotalSF
+Estatisticas:
+count    1443.000000
+mean     2541.126126
+std       732.082263
+min       720.000000
+25%      2009.000000
+50%      2468.000000
+75%      2990.500000
+max      5271.000000
+Skewness: 0.51 | Kurtosis: 0.27
+Distribuicao por faixas (Bins):
+TotalSF
+(715.449, 1175.1]     29
+(1175.1, 1630.2]      74
+(1630.2, 2085.3]     315
+(2085.3, 2540.4]     363
+(2540.4, 2995.5]     303
+(2995.5, 3450.6]     198
+(3450.6, 3905.7]      95
+(3905.7, 4360.8]      46
+(4360.8, 4815.9]      12
+(4815.9, 5271.0]       8
+
+Atributo: OverallQual
+Estatisticas:
+count    1443.000000
+mean        6.074151
+std         1.346662
+min         1.000000
+25%         5.000000
+50%         6.000000
+75%         7.000000
+max        10.000000
+Skewness: 0.18 | Kurtosis: -0.07
+Distribuicao por faixas (Bins):
+OverallQual
+(0.991, 1.9]      1
+(1.9, 2.8]        3
+(2.8, 3.7]       20
+(3.7, 4.6]      116
+(4.6, 5.5]      396
+(5.5, 6.4]      373
+(6.4, 7.3]      317
+(7.3, 8.2]      166
+(8.2, 9.1]       41
+(9.1, 10.0]      10
+
+Atributo: GrLivArea
+Estatisticas:
+count    1443.000000
+mean     1498.245322
+std       484.459406
+min       438.000000
+25%      1127.000000
+50%      1456.000000
+75%      1768.000000
+max      3493.000000
+Skewness: 0.77 | Kurtosis: 0.70
+Distribuicao por faixas (Bins):
+GrLivArea
+(434.945, 743.5]     22
+(743.5, 1049.0]     248
+(1049.0, 1354.5]    335
+(1354.5, 1660.0]    359
+(1660.0, 1965.5]    259
+(1965.5, 2271.0]    116
+(2271.0, 2576.5]     58
+(2576.5, 2882.0]     33
+(2882.0, 3187.5]      7
+(3187.5, 3493.0]      6
+
+Atributo: YearBuilt
+Estatisticas:
+count    1443.00000
+mean     1971.12474
+std        30.17466
+min      1872.00000
+25%      1954.00000
+50%      1972.00000
+75%      2000.00000
+max      2010.00000
+Skewness: -0.60 | Kurtosis: -0.45
+Distribuicao por faixas (Bins):
+YearBuilt
+(1871.862, 1885.8]      9
+(1885.8, 1899.6]        5
+(1899.6, 1913.4]       37
+(1913.4, 1927.2]      122
+(1927.2, 1941.0]       98
+(1941.0, 1954.8]      112
+(1954.8, 1968.6]      258
+(1968.6, 1982.4]      222
+(1982.4, 1996.2]      135
+(1996.2, 2010.0]      445
+
+Atributo: GarageArea
+Estatisticas:
+count    1443.000000
+mean      469.811504
+std       210.557612
+min         0.000000
+25%       326.500000
+50%       478.000000
+75%       576.000000
+max      1390.000000
+Skewness: 0.13 | Kurtosis: 0.79
+Distribuicao por faixas (Bins):
+GarageArea
+(-1.39, 139.0]       80
+(139.0, 278.0]      145
+(278.0, 417.0]      288
+(417.0, 556.0]      499
+(556.0, 695.0]      256
+(695.0, 834.0]       90
+(834.0, 973.0]       70
+(973.0, 1112.0]      10
+(1112.0, 1251.0]      3
+(1251.0, 1390.0]      2
+
+Atributo: HouseAge
+Estatisticas:
+count    1443.000000
+mean       36.692308
+std        30.228182
+min         0.000000
+25%         8.000000
+50%        35.000000
+75%        54.500000
+max       136.000000
+Skewness: 0.60 | Kurtosis: -0.45
+Distribuicao por faixas (Bins):
+HouseAge
+(-0.136, 13.6]    477
+(13.6, 27.2]      116
+(27.2, 40.8]      232
+(40.8, 54.4]      257
+(54.4, 68.0]      117
+(68.0, 81.6]       81
+(81.6, 95.2]      113
+(95.2, 108.8]      33
+(108.8, 122.4]      9
+(122.4, 136.0]      8
+
+Atributo: TotalBsmtSF
+Estatisticas:
+count    1443.000000
+mean     1042.880804
+std       398.209785
+min         0.000000
+25%       794.000000
+50%       988.000000
+75%      1277.500000
+max      3206.000000
+Skewness: 0.30 | Kurtosis: 1.05
+Distribuicao por faixas (Bins):
+TotalBsmtSF
+(-3.206, 320.6]      44
+(320.6, 641.2]      104
+(641.2, 961.8]      537
+(961.8, 1282.4]     399
+(1282.4, 1603.0]    226
+(1603.0, 1923.6]    102
+(1923.6, 2244.2]     28
+(2244.2, 2564.8]      2
+(2564.8, 2885.4]      0
+(2885.4, 3206.0]      1
+
+Atributo: 1stFlrSF
+Estatisticas:
+count    1443.000000
+mean     1150.099099
+std       357.873517
+min       372.000000
+25%       881.000000
+50%      1080.000000
+75%      1377.500000
+max      2898.000000
+Skewness: 0.75 | Kurtosis: 0.42
+Distribuicao por faixas (Bins):
+1stFlrSF
+(369.474, 624.6]     42
+(624.6, 877.2]      316
+(877.2, 1129.8]     439
+(1129.8, 1382.4]    290
+(1382.4, 1635.0]    191
+(1635.0, 1887.6]    116
+(1887.6, 2140.2]     38
+(2140.2, 2392.8]      8
+(2392.8, 2645.4]      2
+(2645.4, 2898.0]      1
+
+Atributo: GarageCars
+Estatisticas:
+count    1443.000000
+mean        1.758836
+std         0.743009
+min         0.000000
+25%         1.000000
+50%         2.000000
+75%         2.000000
+max         4.000000
+Skewness: -0.34 | Kurtosis: 0.24
+Distribuicao por faixas (Bins):
+GarageCars
+(-0.004, 0.4]     80
+(0.4, 0.8]         0
+(0.8, 1.2]       369
+(1.2, 1.6]         0
+(1.6, 2.0]       818
+(2.0, 2.4]         0
+(2.4, 2.8]         0
+(2.8, 3.2]       171
+(3.2, 3.6]         0
+(3.6, 4.0]         5
+
+Atributo: TotalBathrooms
+Estatisticas:
+count    1443.000000
+mean        2.194733
+std         0.769468
+min         1.000000
+25%         2.000000
+50%         2.000000
+75%         2.500000
+max         6.000000
+Skewness: 0.21 | Kurtosis: -0.21
+Distribuicao por faixas (Bins):
+TotalBathrooms
+(0.995, 1.5]    356
+(1.5, 2.0]      456
+(2.0, 2.5]      293
+(2.5, 3.0]      183
+(3.0, 3.5]      142
+(3.5, 4.0]        9
+(4.0, 4.5]        2
+(4.5, 5.0]        1
+(5.0, 5.5]        0
+(5.5, 6.0]        1
+
+Atributo: Fireplaces
+Estatisticas:
+count    1443.000000
+mean        0.600832
+std         0.634251
+min         0.000000
+25%         0.000000
+50%         1.000000
+75%         1.000000
+max         3.000000
+Skewness: 0.64 | Kurtosis: -0.25
+Distribuicao por faixas (Bins):
+Fireplaces
+(-0.003, 0.3]    689
+(0.3, 0.6]         0
+(0.6, 0.9]         0
+(0.9, 1.2]       645
+(1.2, 1.5]         0
+(1.5, 1.8]         0
+(1.8, 2.1]       105
+(2.1, 2.4]         0
+(2.4, 2.7]         0
+(2.7, 3.0]         4
+
+Atributo: OverallCond
+Estatisticas:
+count    1443.000000
+mean        5.577963
+std         1.111652
+min         1.000000
+25%         5.000000
+50%         5.000000
+75%         6.000000
+max         9.000000
+Skewness: 0.68 | Kurtosis: 1.08
+Distribuicao por faixas (Bins):
+OverallCond
+(0.992, 1.8]      1
+(1.8, 2.6]        5
+(2.6, 3.4]       24
+(3.4, 4.2]       57
+(4.2, 5.0]      809
+(5.0, 5.8]        0
+(5.8, 6.6]      250
+(6.6, 7.4]      204
+(7.4, 8.2]       72
+(8.2, 9.0]       21
+
+--- ANALISE DE DISTRIBUICAO: VARIAVEIS CATEGORICAS ---
+
+Atributo: Neighborhood
+              Contagem  Percentual (%)
+Neighborhood                          
+NAmes              225       15.592516
+CollgCr            150       10.395010
+OldTown            112        7.761608
+Edwards             98        6.791407
+Somerst             86        5.959806
+Gilbert             79        5.474705
+NridgHt             75        5.197505
+Sawyer              74        5.128205
+NWAmes              73        5.058905
+SawyerW             59        4.088704
+BrkSide             57        3.950104
+Crawfor             51        3.534304
+Mitchel             49        3.395703
+IDOTRR              37        2.564103
+NoRidge             36        2.494802
+Timber              36        2.494802
+ClearCr             26        1.801802
+SWISU               25        1.732502
+StoneBr             23        1.593902
+Blmngtn             17        1.178101
+MeadowV             17        1.178101
+BrDale              16        1.108801
+Veenker             11        0.762301
+NPkVill              9        0.623701
+Blueste              2        0.138600
+
+Atributo: NbPriceTier
+             Contagem  Percentual (%)
+NbPriceTier                          
+NB_Level_3        485       33.610534
+NB_Level_4        330       22.869023
+NB_Level_1        239       16.562717
+NB_Level_2        208       14.414414
+NB_Level_5        181       12.543313
+
+Atributo: BsmtQual
+          Contagem  Percentual (%)
+BsmtQual                          
+TA             647       44.837145
+Gd             613       42.480942
+Ex             112        7.761608
+NA              36        2.494802
+Fa              35        2.425502
+
+Atributo: KitchenQual
+             Contagem  Percentual (%)
+KitchenQual                          
+TA                733       50.796951
+Gd                582       40.332640
+Ex                 90        6.237006
+Fa                 38        2.633403
+
+Atributo: CentralAir
+            Contagem  Percentual (%)
+CentralAir                          
+Y               1349       93.485793
+N                 94        6.514207
+
+------------------------------------------------------------
+--------- FASE 4: MINERACAO DE PADROES FREQUENTES ----------
+------------------------------------------------------------
+
+--- EXECUTANDO CLUSTERIZACAO (K-Means: 5 clusters) ---
+Clusterizacao concluida. Segmentos: ['Segment_0', 'Segment_3', 'Segment_4', 'Segment_1', 'Segment_2']
+Minerando Regras de Associacao (Apriori)...
+66 Regras encontradas com o alvo.
+
+TOP 20 REGRAS DE ASSOCIACAO (Ordenadas por Lift):
+                                                          antecedents                                            consequents  support  confidence     lift
+                       (GarageCars=Alto, QualAreaInteract=Muito Alto)       (GarageArea=Muito Alto, SalePriceBin=Muito Alto) 0.083160    0.937500 7.515625
+                                (GarageCars=Alto, TotalSF=Muito Alto)       (GarageArea=Muito Alto, SalePriceBin=Muito Alto) 0.082467    0.915385 7.338333
+                                                    (GarageCars=Alto)       (GarageArea=Muito Alto, SalePriceBin=Muito Alto) 0.097020    0.818713 6.563353
+                (TotalBsmtSF=Muito Alto, QualAreaInteract=Muito Alto)          (TotalSF=Muito Alto, SalePriceBin=Muito Alto) 0.083853    0.923664 6.228259
+                   (1stFlrSF=Muito Alto, QualAreaInteract=Muito Alto)          (TotalSF=Muito Alto, SalePriceBin=Muito Alto) 0.081774    0.887218 5.982503
+                 (GarageArea=Muito Alto, QualAreaInteract=Muito Alto)          (TotalSF=Muito Alto, SalePriceBin=Muito Alto) 0.090783    0.793939 5.353526
+                          (GarageArea=Muito Alto, TotalSF=Muito Alto) (SalePriceBin=Muito Alto, QualAreaInteract=Muito Alto) 0.090783    0.803681 5.200501
+                               (OverallQual=Alto, TotalSF=Muito Alto)                (ExterQual=Gd, SalePriceBin=Muito Alto) 0.091476    0.750000 5.104953
+          (ExterQual=Gd, QualAreaInteract=Muito Alto, KitchenQual=Gd)            (OverallQual=Alto, SalePriceBin=Muito Alto) 0.080388    0.768212 5.084999
+           (QualAreaInteract=Muito Baixo, TotalBathrooms=Muito Baixo)     (MSSubClass=Muito Baixo, SalePriceBin=Muito Baixo) 0.081774    0.751592 5.067980
+                           (GrLivArea=Muito Alto, TotalSF=Muito Alto) (SalePriceBin=Muito Alto, QualAreaInteract=Muito Alto) 0.096327    0.776536 5.024852
+                                 (ExterQual=Gd, GrLivArea=Muito Alto) (SalePriceBin=Muito Alto, QualAreaInteract=Muito Alto) 0.084546    0.767296 4.965056
+                                   (ExterQual=Gd, TotalSF=Muito Alto)            (OverallQual=Alto, SalePriceBin=Muito Alto) 0.091476    0.750000 4.964450
+                                   (ExterQual=Gd, TotalSF=Muito Alto) (SalePriceBin=Muito Alto, QualAreaInteract=Muito Alto) 0.091476    0.750000 4.853139
+                               (OverallQual=Alto, TotalSF=Muito Alto) (SalePriceBin=Muito Alto, QualAreaInteract=Muito Alto) 0.091476    0.750000 4.853139
+                       (GarageCars=Alto, QualAreaInteract=Muito Alto)                              (SalePriceBin=Muito Alto) 0.085239    0.960938 4.814697
+(GarageCars=Alto, GarageArea=Muito Alto, QualAreaInteract=Muito Alto)                              (SalePriceBin=Muito Alto) 0.083160    0.960000 4.810000
+      (ExterQual=Gd, TotalSF=Muito Alto, QualAreaInteract=Muito Alto)                              (SalePriceBin=Muito Alto) 0.091476    0.942857 4.724107
+                (TotalBsmtSF=Muito Alto, QualAreaInteract=Muito Alto)                              (SalePriceBin=Muito Alto) 0.085239    0.938931 4.704437
+                                (GarageCars=Alto, TotalSF=Muito Alto)                              (SalePriceBin=Muito Alto) 0.084546    0.938462 4.702083
+
+Minerando Padroes Sequenciais (PrefixSpan)...
+446 Padroes de atributos encontrados.
+   Suporte:  152 | Padrao: ['Alto', 'NB_Level_3', 'NB_Level_3', 'NAmes', 'Medio', 'Baixo']
+   Suporte:  207 | Padrao: ['Medio', 'NB_Level_3', 'NB_Level_3', 'Medio', 'Medio']
+   Suporte:  189 | Padrao: ['Alto', 'NB_Level_3', 'NB_Level_3', 'Medio', 'Medio']
+   Suporte:  187 | Padrao: ['Alto', 'NB_Level_3', 'NB_Level_3', 'Medio', 'Baixo']
+   Suporte:  183 | Padrao: ['Segment_3', 'NB_Level_3', 'NB_Level_3', 'Medio', 'Baixo']
+   Suporte:  180 | Padrao: ['NB_Level_3', 'NB_Level_3', 'NAmes', 'Medio', 'Baixo']
+   Suporte:  171 | Padrao: ['NB_Level_3', 'NB_Level_3', 'Medio', 'Medio', 'Baixo']
+   Suporte:  170 | Padrao: ['Alto', 'NB_Level_3', 'NB_Level_3', 'NAmes', 'Medio']
+   Suporte:  166 | Padrao: ['Alto', 'NB_Level_3', 'NB_Level_3', 'NAmes', 'Baixo']
+   Suporte:  165 | Padrao: ['Baixo', 'NB_Level_3', 'NB_Level_3', 'Medio', 'Medio']
+
+--- MINERANDO EVOLUCAO TEMPORAL POR BAIRRO (POR DECADA) ---
+Geradas 19 sequencias de evolucao.
+30 Padroes de evolucao encontrados.
+   Suporte:    3 | Evolucao: ['Q:Medio_P:Muito Baixo', 'Q:Medio_P:Muito Baixo', 'Q:Medio_P:Muito Baixo', 'Q:Medio_P:Muito Baixo']
+   Suporte:    3 | Evolucao: ['Q:Medio_P:Muito Baixo', 'Q:Medio_P:Muito Baixo', 'Q:Medio_P:Muito Baixo', 'Q:Medio_P:Baixo']
+   Suporte:    5 | Evolucao: ['Q:Medio_P:Muito Baixo', 'Q:Medio_P:Muito Baixo', 'Q:Medio_P:Muito Baixo']
+   Suporte:    4 | Evolucao: ['Q:Medio_P:Baixo', 'Q:Medio_P:Medio', 'Q:Medio_P:Baixo']
+   Suporte:    3 | Evolucao: ['Q:Medio_P:Baixo', 'Q:Medio_P:Baixo', 'Q:Medio_P:Medio']
+   Suporte:    3 | Evolucao: ['Q:Medio_P:Baixo', 'Q:Medio_P:Medio', 'Q:Alto_P:Muito Alto']
+   Suporte:    3 | Evolucao: ['Q:Medio_P:Medio', 'Q:Medio_P:Medio', 'Q:Alto_P:Muito Alto']
+   Suporte:    3 | Evolucao: ['Q:Medio_P:Medio', 'Q:Medio_P:Baixo', 'Q:Medio_P:Medio']
+   Suporte:    3 | Evolucao: ['Q:Medio_P:Muito Baixo', 'Q:Medio_P:Baixo', 'Q:Medio_P:Baixo']
+   Suporte:    3 | Evolucao: ['Q:Medio_P:Muito Baixo', 'Q:Medio_P:Muito Baixo', 'Q:Medio_P:Baixo']
+
+------------------------------------------------------------
+---------- FASE 5: MODELAGEM PREDITIVA (XGBOOST) -----------
+------------------------------------------------------------
+
+Preparando dados para o modelo...
+
+Iniciando treinamento com Validacao Cruzada (10-fold)...
+
+Executando Validacao Cruzada (10 folds)...
+R2 Medio: 0.9062
+RMSE Medio (log): 0.1171
+
+Modelo final treinado. Melhor iteracao: 1312
+MAE na escala original: $12,382.22
+
+--- TOP 10 FEATURES (IMPORTANCIA DO MODELO) ---
+         Feature  Importance
+     OverallQual    0.157475
+QualAreaInteract    0.130311
+       ExterQual    0.092114
+         TotalSF    0.041436
+      GarageCars    0.034587
+      CentralAir    0.033795
+     KitchenQual    0.031720
+     NbPriceTier    0.025479
+    Neighborhood    0.019119
+        BsmtQual    0.017144
+
+Gerando graficos de resultados e residuos...
+
+--- METRICAS DE REGRESSAO: XGBoost Final ---
+RMSE (log): 0.0781
+MAE (log):  0.0561
+
+Analise de Residuos (Decis de Erro):
+count    1443.000000
+mean        0.001096
+std         0.078165
+min        -0.535427
+25%        -0.038955
+50%         0.003465
+75%         0.044266
+max         0.393035
+Grafico de regressao salvo em: reports/figures/resultados_regressao.png
+
+--- TABELA DE IMPORTANCIA DAS FEATURES (Top 20) ---
+                  Importance
+OverallQual         0.157475
+QualAreaInteract    0.130311
+ExterQual           0.092114
+TotalSF             0.041436
+GarageCars          0.034587
+CentralAir          0.033795
+KitchenQual         0.031720
+NbPriceTier         0.025479
+Neighborhood        0.019119
+BsmtQual            0.017144
+GarageFinish        0.013236
+TotalBsmtSF         0.013072
+GarageCond          0.013033
+TotalBathrooms      0.012051
+FireplaceQu         0.010450
+MSSubClass          0.010203
+GarageType          0.010120
+LowQualFinSF        0.010105
+GrLivArea           0.010032
+YearsSinceRemod     0.009807
+Grafico de importancia salvo em: reports/figures/importancia_features_model.png
+
+Iniciando analise detalhada de erros por faixa de preco...
+
+--- ANALISE DE ERRO POR DECIL DE PRECO ---
+D1: 10% mais baratas -> D10: 10% mais caras
+             Media_Erro_Log  Mediana_Erro_Log  Max_Erro_Log  Contagem  MAE_Original ($)
+Faixa_Preco                                                                            
+D1                 0.095629          0.069853      0.535427       145       8412.734025
+D2                 0.057988          0.044365      0.363235       149       6704.252359
+D3                 0.044551          0.033617      0.249037       142       5809.533011
+D4                 0.043396          0.030023      0.280979       141       6178.306682
+D5                 0.051190          0.038762      0.427527       146       7879.252301
+D6                 0.048761          0.038575      0.218587       143       8249.176246
+D7                 0.046127          0.039618      0.213142       147       8609.070578
+D8                 0.053251          0.043323      0.295062       142      11083.131382
+D9                 0.055854          0.039971      0.288208       143      13566.454764
+D10                0.063192          0.048122      0.393035       145      21027.585668
+
+O modelo apresenta o MAIOR erro medio no decil: D1
+
+------------------------------------------------------------
+------------ FASE 6: GERACAO DE SUBMISSAO FINAL ------------
+------------------------------------------------------------
+Carregando dados de teste...
+Dados carregados de data/raw/test.csv. Shape: (1459, 80)
+
+--- LIMPEZA E IMPUTACAO DE DADOS ---
+Limpeza concluida. Valores ausentes tratados.
+
+--- EXECUTANDO FEATURE ENGINEERING ---
+Novas features criadas. Total de colunas: 92
+
+Submissao salva em data/processed/submission.csv
+
+RESUMO DA SUBMISSAO (Primeiras 10 linhas):
+  Id     SalePrice
+1461 122945.468750
+1462 161650.406250
+1463 181610.640625
+1464 185945.796875
+1465 191552.953125
+1466 177008.828125
+1467 176421.171875
+1468 170091.046875
+1469 188418.328125
+1470 128217.953125
+
+------------------------------------------------------------
+------------------- PIPELINE FINALIZADO --------------------
+------------------------------------------------------------
+Fim: 2026-03-16 16:18:39
+Duracao total: 0:00:10.511543
+------------------------------------------------------------
