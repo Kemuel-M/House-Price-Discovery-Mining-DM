@@ -1,3 +1,7 @@
 venv/
 tasks_log/
 exemplos/
+.git/
+src/__pycache__/
+src/f3/
+src/old/
